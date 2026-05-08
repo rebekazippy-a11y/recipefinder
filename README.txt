@@ -1,0 +1,1 @@
+Open index.html in browser or upload folder to Netlify Drop.

@@ -1,0 +1,172 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Recipe Finder</title>
+<style>
+body {
+    font-family: Arial;
+    background:#111827;
+    color:white;
+    margin:0;
+    padding:20px;
+}
+
+h1 {
+    text-align:center;
+}
+
+.filters {
+    display:grid;
+    grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+    gap:15px;
+    margin-bottom:20px;
+}
+
+.box {
+    background:#1f2937;
+    padding:15px;
+    border-radius:12px;
+}
+
+input, select {
+    width:100%;
+    padding:8px;
+    border-radius:8px;
+    border:none;
+    margin-top:5px;
+}
+
+.recipe {
+    background:#1f2937;
+    margin-bottom:15px;
+    padding:15px;
+    border-radius:12px;
+}
+
+.tag {
+    display:inline-block;
+    background:#374151;
+    padding:4px 8px;
+    border-radius:999px;
+    margin:3px;
+    font-size:12px;
+}
+
+.ingredients {
+    max-height:180px;
+    overflow:auto;
+}
+</style>
+</head>
+<body>
+
+<h1>🍳 Recipe Finder</h1>
+
+<div class="filters">
+    <div class="box">
+        <label>Search</label>
+        <input type="text" id="search">
+    </div>
+
+    <div class="box">
+        <label>Category</label>
+        <select id="category">
+            <option value="">All</option>
+        </select>
+    </div>
+
+    <div class="box">
+        <label>Time</label>
+        <input type="text" id="time" placeholder="e.g. 30">
+    </div>
+
+    <div class="box">
+        <label>Tiredness</label>
+        <input type="text" id="tiredness">
+    </div>
+
+    <div class="box">
+        <label>Tags</label>
+        <input type="text" id="tags" placeholder="comma separated">
+    </div>
+
+    <div class="box">
+        <label>Ingredients</label>
+        <div class="ingredients" id="ingredientBox"></div>
+    </div>
+</div>
+
+<div id="recipes"></div>
+
+<script>
+const recipes = [];
+
+const categoryEl = document.getElementById("category");
+const ingredientBox = document.getElementById("ingredientBox");
+
+[...new Set(recipes.map(r=>r.category))].forEach(cat=>{
+    const o=document.createElement("option");
+    o.value=cat;
+    o.textContent=cat;
+    categoryEl.appendChild(o);
+});
+
+const allIngredients=[...new Set(recipes.flatMap(r=>r.ingredients))].sort();
+
+allIngredients.forEach(ing=>{
+    const label=document.createElement("label");
+    label.style.display="block";
+    label.innerHTML=`<input type="checkbox" value="${ing}"> ${ing}`;
+    ingredientBox.appendChild(label);
+});
+
+function render(){
+    const search=document.getElementById("search").value.toLowerCase();
+    const category=document.getElementById("category").value;
+    const time=document.getElementById("time").value.toLowerCase();
+    const tired=document.getElementById("tiredness").value.toLowerCase();
+    const tags=document.getElementById("tags").value.toLowerCase().split(",").map(t=>t.trim()).filter(Boolean);
+
+    const checked=[...ingredientBox.querySelectorAll("input:checked")].map(c=>c.value);
+
+    const filtered=recipes.filter(r=>{
+        if(search && !r.name.toLowerCase().includes(search)) return false;
+        if(category && r.category!==category) return false;
+        if(time && !String(r.time).toLowerCase().includes(time)) return false;
+        if(tired && !String(r.tiredness).toLowerCase().includes(tired)) return false;
+
+        if(tags.length && !tags.every(t=>r.tags.includes(t))) return false;
+
+        if(checked.length && !checked.every(i=>r.ingredients.includes(i))) return false;
+
+        return true;
+    });
+
+    const container=document.getElementById("recipes");
+
+    container.innerHTML=filtered.map(r=>`
+        <div class="recipe">
+            <h2>${r.name}</h2>
+            <p><b>Category:</b> ${r.category}</p>
+            <p><b>Time:</b> ${r.time}</p>
+            <p><b>Tiredness:</b> ${r.tiredness}</p>
+
+            <div>
+                ${r.tags.map(t=>`<span class="tag">${t}</span>`).join("")}
+            </div>
+
+            <p><b>Ingredients:</b> ${r.ingredients.join(", ")}</p>
+        </div>
+    `).join("");
+}
+
+document.querySelectorAll("input,select").forEach(el=>el.addEventListener("input",render));
+ingredientBox.addEventListener("change",render);
+
+render();
+</script>
+
+</body>
+</html>
